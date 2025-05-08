@@ -2,9 +2,23 @@
 
 # import the modules you need here
 import argparse
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime 
+import wget
+import os
+import numpy as np
+import uptide
+import pytz
+import math
+tidal_file = "data/1947ABE.txt"
 
 def read_tidal_data(filename):
-
+    df = pd.read_csv(tidal_file,# if tidal_file != "tidal_file.txt" else io.StringIO(file_content))
+                    skiprows=12,
+                    delim_whitespace=True,
+                    names=['Cycle', 'Date', 'Time', 'Sea Level', 'Residuals'],
+                    header=None)
     return 0
     
 def extract_single_year_remove_mean(year, data):
