@@ -14,17 +14,20 @@ import math
 tidal_file = "data/1947ABE.txt"
 
 def read_tidal_data(filename):
-    df = pd.read_csv(tidal_file, # if tidal_file != "tidal_file.txt" else io.StringIO(file_content))
-                    skiprows=11,
-                    delim_whitespace=True,
-                    names=['Cycle', 'Date', 'Time', 'Sea Level', 'Residuals'],
-                    header=None)
-    df['CombinedDT'] = df['Date'].astype(str) + df['Time'].astype(str).str.pad(4, fillchar='0')
-    print(df['CombinedDT'].head()) 
-    df['Datetime'] = pd.to_datetime(df['CombinedDT'], format='%Y/%m/%d%H:%M:%S', errors='coerce')
-    df.set_index('Datetime', inplace=True)
-    df.drop(columns=['CombinedDT'], inplace=True, errors='ignore')
-    return df
+   df = pd.read_csv(tidal_file, # if tidal_file != "tidal_file.txt" else io.StringIO(file_content))
+                         skiprows=11,
+                         sep=r'\s+',
+                         names=['Cycle', 'Date', 'Time', 'Sea Level', 'Residuals'],
+                         header=None)
+   df['CombinedDT'] = df['Date'].astype(str) + df['Time'].astype(str).str.pad(4, fillchar='0')
+   df['Datetime'] = pd.to_datetime(df['CombinedDT'], format='%Y/%m/%d%H:%M:%S', errors='coerce')
+   df.set_index('Datetime', inplace=True)
+   df.drop(columns=['CombinedDT'], inplace=True, errors='ignore') #skeleton from gemini - inputed format and Datetime
+   df['Sea Level'] = df['Sea Level'].replace(r'.*[MNT].*', np.nan, regex=True)
+   df['Sea Level'] = pd.to_numeric(df['Sea Level'], errors='coerce')
+   return df
+   
+
     
 def extract_single_year_remove_mean(year, data):
    
