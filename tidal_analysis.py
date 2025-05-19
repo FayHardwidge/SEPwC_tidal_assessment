@@ -13,21 +13,21 @@ import pytz
 import math
 tidal_file = "data/1947ABE.txt"
 
-def read_tidal_data(filename):
-   df = pd.read_csv(tidal_file, # if tidal_file != "tidal_file.txt" else io.StringIO(file_content))
-                         skiprows=11,
-                         sep=r'\s+',
-                         names=['Cycle', 'Date', 'Time', 'Sea Level', 'Residuals'],
-                         header=None)
-   df['CombinedDT'] = df['Date'].astype(str) + df['Time'].astype(str).str.pad(4, fillchar='0')
-   df['Datetime'] = pd.to_datetime(df['CombinedDT'], format='%Y/%m/%d%H:%M:%S', errors='coerce')
-   df.set_index('Datetime', inplace=True)
-   df.drop(columns=['CombinedDT'], inplace=True, errors='ignore') #skeleton from gemini - inputed format and Datetime
-   df['Sea Level'] = df['Sea Level'].replace(r'.*[MNT].*', np.nan, regex=True)
-   df['Sea Level'] = pd.to_numeric(df['Sea Level'], errors='coerce')
-   return df
-   
-
+def read_tidal_data(filename):  
+    df = pd.read_csv(tidal_file, # if tidal_file != "tidal_file.txt" else io.StringIO(file_content))
+                    skiprows=11,
+                    sep=r'\s+',
+                    names=['Cycle', 'Date', 'Time', 'Sea Level', 'Residuals'],
+                    header=None)
+    df['CombinedDT'] = df['Date'].astype(str) + df['Time'].astype(str).str.pad(4, fillchar='0')
+    df['Datetime'] = pd.to_datetime(df['CombinedDT'], format='%Y/%m/%d%H:%M:%S', errors='coerce')
+    df.set_index('Datetime', inplace=True)
+    df.drop(columns=['CombinedDT'], inplace=True, errors='ignore') #skeleton from gemini - inputed format and Datetime
+    df['Sea Level'] = df['Sea Level'].replace(r'.*[MNT].*', np.nan, regex=True)
+    df['Sea Level'] = pd.to_numeric(df['Sea Level'], errors='coerce')
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"This file does not exist")
+    return df
     
 def extract_single_year_remove_mean(year, data):
    
@@ -42,9 +42,12 @@ def extract_section_remove_mean(start, end, data):
 
 
 def join_data(data1, data2):
-
-    return 
-
+    if not all(col in data1.columns for col in ['Sea Level']) or \
+        not all(col in data2.columns for col in ['Sea Level']):
+            return None
+    combined_df = pd.concat([data1, data2])
+    combined_df.sort_index(inplace=True)
+    return combined_df
 
 
 def sea_level_rise(data):
