@@ -21,7 +21,7 @@ def read_tidal_data(filename):
     df['CombinedDT'] = df['Date'].astype(str) + df['Time'].astype(str)
     df['Datetime'] = pd.to_datetime(df['CombinedDT'], format='%Y/%m/%d%H:%M:%S', errors='coerce') #creating new column (Datetime) with the now concated Date and Time data (CombinedDT)
     df.set_index('Datetime', inplace=True)
-    df.drop(columns=['CombinedDT'], inplace=True, errors='ignore') #removes the temporary CombinedDT column from DataFrame
+    df.drop(columns=['CombinedDT'], inplace=True, errors='ignore') 
     df['Sea Level'] = df['Sea Level'].replace(r'.*[MNT].*', np.nan, regex=True)
     df['Sea Level'] = pd.to_numeric(df['Sea Level'], errors='coerce') #converts all values in Seal Level column to numeric value, any that can't be are turned into np.nan
     if not os.path.exists(filename):
@@ -34,16 +34,20 @@ def extract_single_year_remove_mean(year, data):
     year1947['Sea Level'] = pd.to_numeric(year1947['Sea Level'], errors='coerce')
     sea_level_mean = year1947['Sea Level'].mean()
     year1947['Sea Level'] = year1947['Sea Level'] - sea_level_mean #mean-centering of the Sea Level data for the extracted year, 1947
-    return year1947
+    return year1947 #main skeleton from gemini
 
 def extract_section_remove_mean(start, end, data):
-
-
-    return 
+    start = pd.to_datetime(start, format='%Y%m%d')
+    end = pd.to_datetime(end, format='%Y%m%d') + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+    data = data.loc[start:end].copy()
+    data['Sea Level'] = pd.to_numeric(data['Sea Level'], errors='coerce')
+    sea_level_mean = data['Sea Level'].mean()
+    data['Sea Level'] = data['Sea Level'] - sea_level_mean
+    return data #main skeleton from gemini
 
 
 def join_data(data1, data2): 
-    return pd.concat([data2, data1]).sort_index() #concates DataFrame (links data1 and data2 in a series) then rearranges in chronological order 
+    return pd.concat([data2, data1]).sort_index() #from gemini (condensed version)
 
 def sea_level_rise(data):
 
