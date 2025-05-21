@@ -30,12 +30,12 @@ def read_tidal_data(filename):
     return df
 
 def extract_single_year_remove_mean(year, data):
-    target_year = int(year)
-    year1947 = data[data.index.year == target_year].copy() #stores rows from the data DataFrame from target_year in a new year1947 DataFrame 
-    year1947['Sea Level'] = pd.to_numeric(year1947['Sea Level'], errors='coerce')
-    sea_level_mean = year1947['Sea Level'].mean()
-    year1947['Sea Level'] = year1947['Sea Level'] - sea_level_mean #mean-centering of the Sea Level data for the extracted year, 1947
-    return year1947 #main skeleton from gemini
+    year_string_start = str(year)
+    year_string_end = str(year)
+    year1947 = data.loc[year_string_start:year_string_end, ['Sea Level']]
+    mmm = np.mean(year1947['Sea Level'])
+    year1947['Sea Level'] -= mmm
+    return year1947 
 
 def extract_section_remove_mean(start, end, data):
     start = pd.to_datetime(start, format='%Y%m%d')
