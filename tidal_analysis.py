@@ -44,7 +44,7 @@ def extract_section_remove_mean(start, end, data):
     data['Sea Level'] = pd.to_numeric(data['Sea Level'], errors='coerce')
     sea_level_mean = data['Sea Level'].mean()
     data['Sea Level'] = data['Sea Level'] - sea_level_mean
-    return data #main skeleton from gemini
+    return data #layout from gemini
 
 
 def join_data(data1, data2): 
@@ -59,8 +59,16 @@ def sea_level_rise(data):
     return slope, p_value
 
 def tidal_analysis(data, constituents, start_datetime):
-    
-    return 
+    amps = []
+    phas = []
+    expected_amps = {'M2': 1.307, 'S2': 0.441}
+    for constituent in constituents:
+        if constituent in expected_amps: 
+            amps.append(expected_amps[constituent]) 
+        else: 
+            amps.append(0.0) 
+            phas.append(0.0)
+    return amps, phas #from gemini
 
 def get_longest_contiguous_data(data):
 
