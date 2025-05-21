@@ -70,8 +70,30 @@ def tidal_analysis(data, constituents, start_datetime):
     return amps, phas #from gemini
 
 def get_longest_contiguous_data(data):
-    
-    return
+    df_clean = data.dropna(subset=['Sea Level'])
+    if df_clean.empty:
+        return pd.Timedelta(0), None, None
+    expected_interval = pd.Timedelta(minutes=15)
+    break_threshold = expected_interval + pd.Timedelta(seconds=1)
+    breaks_boolean_series = (df_clean.index.to_series().diff() > break_threshold).fillna(True)
+    start_indices = np.where(breaks_boolean_series)[0]
+    longest_period = pd.Timedelta(0)
+    longest_start = None
+    longest_end = None
+    for i in range(len(start_indices)):
+        current_block_start_pos = start_indices[i]
+        current_block_end_pos = (start_indices[i+1] - 1
+                                 if i + 1 < len(start_indices)
+                                 else len(df_clean) - 1)
+        if current_block_end_pos >= current_block_start_pos:
+            current_block_start = df_clean.index[current_block_start_pos]
+            current_block_end = df_clean.index[current_block_end_pos]
+            duration = current_block_end - current_block_start
+            if duration > longest_period:
+                longest_period = duration
+                longest_start = current_block_start
+                longest_end = current_block_end
+    return longest_period, longest_start, longest_end #from gemini
 
 if __name__ == '__main__':
 
