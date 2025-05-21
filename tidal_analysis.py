@@ -11,6 +11,7 @@ import numpy as np
 import uptide
 import pytz
 import math
+from scipy import stats
 
 def read_tidal_data(filename):  
     df = pd.read_csv(filename, 
@@ -50,13 +51,15 @@ def join_data(data1, data2):
     return pd.concat([data2, data1]).sort_index() #from gemini (condensed version)
 
 def sea_level_rise(data):
-
-                                                     
-    return 
+    df_clean = data.dropna(subset=['Sea Level'])
+    x = df_clean.index.astype('int64')//10**9
+    y = df_clean['Sea Level'].values
+    slope, _, _, p_value, _ = stats.linregress(x,y)
+    slope = slope * 3600 * 24 #changed to average sea level rise per day instead of per second
+    return slope, p_value
 
 def tidal_analysis(data, constituents, start_datetime):
-
-
+    
     return 
 
 def get_longest_contiguous_data(data):
