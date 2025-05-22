@@ -91,17 +91,13 @@ def tidal_analysis(data, constituents, start_datetime):
     """
     Performs tidal harmonic analysis on sea level data using the Uptide library
     """
-    amps = []
-    phas = []
-    expected_amps = {'M2': 1.307, 'S2': 0.441}
-    for constituent in constituents:
-        if constituent in expected_amps:
-            amps.append(expected_amps[constituent])
-            phas.append(0.0)
-        else:
-            amps.append(0.0)
-            phas.append(0.0)
-    return amps, phas #from gemini
+    data = data.dropna(subset=['Sea Level']).copy() #
+    tide_obj = uptide.Tides(constituents)
+    tide_obj.set_initial_time(start_datetime)
+    seconds_since = (data.index.astype('int64').to_numpy() / 1e9) - start_datetime.timestamp()
+    elevation_data = data['Sea Level'].to_numpy() #up to here from gemini
+    amp, pha = uptide.harmonic_analysis(tide_obj, elevation_data, seconds_since)
+    return amp, pha
 
 def get_longest_contiguous_data(data):
     """
@@ -117,7 +113,7 @@ def get_longest_contiguous_data(data):
     longest_period = pd.Timedelta(0) #pylint: disable=redefined-outer-name
     longest_start = None #pylint: disable=redefined-outer-name
     longest_end = None #pylint: disable=redefined-outer-name
-    for i, current_block_start_pos in enumerate(start_indices): #from gemini
+    for i, current_block_start_pos in enumerate(start_indices):
         current_block_start_pos = start_indices[i]
         current_block_end_pos = (start_indices[i+1] - 1
                                  if i + 1 < len(start_indices)
@@ -129,7 +125,7 @@ def get_longest_contiguous_data(data):
             if duration > longest_period:
                 longest_period = duration
                 longest_start = current_block_start
-                longest_end = current_block_end
+                longest_end = current_block_end #from gemini
     return longest_period, longest_start, longest_end #pylint: disable=redefined-outer-name
 
 if __name__ == '__main__':
