@@ -1,3 +1,4 @@
+#Copyright 2025 by Fay Hardwidge. CC-SA
 #!/usr/bin/env python3
 
 """
@@ -41,7 +42,6 @@ def read_tidal_data(filename): #pylint: disable=redefined-outer-name
     df['Sea Level'] = df['Sea Level'].astype(str)
     df['Sea Level'] = df['Sea Level'].replace(r'.*[MNTN].*', np.nan, regex=True)
     df['Sea Level'] = pd.to_numeric(df['Sea Level'], errors='coerce')
-    df.info()
     if not os.path.exists(filename):
         raise FileNotFoundError("This file does not exist")
     return df #layout from gemini
@@ -146,21 +146,26 @@ if __name__ == '__main__':
     args = parser.parse_args()
     dirname = args.directory
     verbose = args.verbose
-    all_data = pd.DataFrame()
+    data = pd.DataFrame()
     for filename in os.listdir(dirname):
         if filename.endswith(".txt"):
             filepath = os.path.join(dirname, filename)
             df = read_tidal_data(filepath)
-            all_data = join_data(all_data, df)
+            data = join_data(data, df)
             if verbose:
                 print(f"Successfully read and joined data from {filename}")
-    if not all_data.empty:
-        slope, p_value = sea_level_rise(all_data)
+    if not data.empty:
+        slope, p_value = sea_level_rise(data)
         print(f"Sea-level rise: {slope} meters per day (p-value: {p_value})")
-        longest_period, longest_start, longest_end = get_longest_contiguous_data(all_data)
+        first_valid_idx = data.dropna(subset=['Sea Level']).index[0]
+        constituents = ['M2', 'S2']
+        start_datetime = pytz.timezone("utc").localize(first_valid_idx.to_pydatetime())
+        amp, pha = tidal_analysis(data, constituents, start_datetime)
+        print(f"{constituents}: Amplitude = {amp}, Phase = {pha}")
+        longest_period, longest_start, longest_end = get_longest_contiguous_data(data)
         print(f"Longest contiguous period of data: {longest_period}")
         if longest_start and longest_end:
             print(f"Start of longest contiguous period: {longest_start}")
             print(f"End of longest contiguous period: {longest_end}")
     print("\nSample of processed tidal data (first 5 rows):")
-    print(all_data.head()) #from gemini
+    print(data.head()) #from gemini
