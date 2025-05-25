@@ -1,6 +1,7 @@
 #Copyright 2025 by Fay Hardwidge. CC-SA
 #!/usr/bin/env python3
-
+# pylint: disable=redefined-outer-name
+# pylint: disable=line-too-long
 """
 This script performs a comprehensive analysis of tidal gauge data from multiple text files.
 
@@ -22,12 +23,11 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 
-
-def read_tidal_data(filename): #pylint: disable=redefined-outer-name
+def read_tidal_data(filename):
     """
     Reads tidal data from a specified text file, cleans it, and sets a Datetime index.
     """
-    df = pd.read_csv(filename, #pylint: disable=redefined-outer-name
+    df = pd.read_csv(filename,
                      skiprows=11,
                      sep=r'\s+',
                      names=['Cycle', 'Date', 'Time', 'ASLVBG02', 'Residuals'],
@@ -35,7 +35,7 @@ def read_tidal_data(filename): #pylint: disable=redefined-outer-name
     df['CombinedDT'] = df['Date'].astype(str) + df['Time'].astype(str)
     df['Datetime'] = pd.to_datetime(df['CombinedDT'],
                                     format='%Y/%m/%d%H:%M:%S',
-                                    errors='coerce') #new Datetime column with concated Date and Time data (CombinedDT) # pylint: disable=line-too-long
+                                    errors='coerce') #new Datetime column with concated Date and Time data (CombinedDT)
     df.set_index('Datetime', inplace=True)
     df.drop(columns=['CombinedDT'], inplace=True, errors='ignore')
     df.rename(columns={'ASLVBG02': 'Sea Level'}, inplace=True)
@@ -53,22 +53,21 @@ def extract_single_year_remove_mean(year, data):
     year_string_start = str(year)
     year_string_end = str(year)
     year1947 = data.loc[year_string_start:year_string_end, ['Sea Level']].copy()
-    mmm = np.mean(year1947['Sea Level'])
+    mmm = np.mean(year1947['Sea Level']) #calculates arithmetic mean of 'Sea Level' values extracted for specified year
     year1947['Sea Level'] -= mmm
-    return year1947 
+    return year1947
 
 def extract_section_remove_mean(start, end, data):
     """
-    Extracts 'Sea Level' data for a specified date range and removes the mean sea level for that period. #pylint: disable=line-too-long
+    Extracts 'Sea Level' data for a specified date range and removes the mean sea level for that period.
     """
     start = pd.to_datetime(start, format='%Y%m%d')
     end = pd.to_datetime(end, format='%Y%m%d') + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
-    data = data.loc[start:end].copy()
+    data = data.loc[start:end].copy() #slices Dateframe (.loc) to collect continuous segment of data, based on calculated start/end
     data['Sea Level'] = pd.to_numeric(data['Sea Level'], errors='coerce')
-    sea_level_mean = data['Sea Level'].mean()
+    sea_level_mean = data['Sea Level'].mean() #calculates average 'Sea Level' for extracted time segment
     data['Sea Level'] = data['Sea Level'] - sea_level_mean
     return data #from gemini
-
 
 def join_data(data1, data2):
     """
@@ -80,21 +79,21 @@ def sea_level_rise(data):
     """
     Calculates the rate of sea-level rise and its p-value using linear regression.
     """
-    df_clean = data.dropna(subset=['Sea Level'])
-    x = df_clean.index.astype('int64')//10**9
+    df_clean = data.dropna(subset=['Sea Level']) #dropna removes rows in 'Sea Level' that contain missing value
+    x = df_clean.index.astype('int64')//10**9 #.astype('int64') coverts datetime objects to numerical representation (typically nanoseconds)
     y = df_clean['Sea Level'].values
-    slope, _, _, p_value, _ = stats.linregress(x,y) #pylint: disable=redefined-outer-name
+    slope, _, _, p_value, _ = stats.linregress(x,y)
     slope = slope * 3600 * 24 #changed to average sea level rise per day instead of per second
-    return slope, p_value #pylint: disable=redefined-outer-name
+    return slope, p_value
 
 def tidal_analysis(data, constituents, start_datetime):
     """
     Performs tidal harmonic analysis on sea level data using the Uptide library
     """
-    data = data.dropna(subset=['Sea Level']).copy() #
-    tide_obj = uptide.Tides(constituents)
+    data = data.dropna(subset=['Sea Level']).copy()
+    tide_obj = uptide.Tides(constituents) #creates tide_obj to hold astronomical frequencies/phases for these tidal components
     tide_obj.set_initial_time(start_datetime)
-    seconds_since = (data.index.astype('int64').to_numpy() / 1e9) - start_datetime.timestamp()
+    seconds_since = (data.index.astype('int64').to_numpy() / 1e9) - start_datetime.timestamp() #1e9 divides nanoseconds to convert to seconds
     elevation_data = data['Sea Level'].to_numpy() #up to here from gemini
     amp, pha = uptide.harmonic_analysis(tide_obj, elevation_data, seconds_since)
     return amp, pha
@@ -110,9 +109,9 @@ def get_longest_contiguous_data(data):
     break_threshold = expected_interval + pd.Timedelta(seconds=1)
     breaks_boolean_series = (df_clean.index.to_series().diff() > break_threshold).fillna(True)
     start_indices = np.where(breaks_boolean_series)[0]
-    longest_period = pd.Timedelta(0) #pylint: disable=redefined-outer-name
-    longest_start = None #pylint: disable=redefined-outer-name
-    longest_end = None #pylint: disable=redefined-outer-name
+    longest_period = pd.Timedelta(0)
+    longest_start = None
+    longest_end = None
     for i, current_block_start_pos in enumerate(start_indices):
         current_block_start_pos = start_indices[i]
         current_block_end_pos = (start_indices[i+1] - 1
@@ -126,7 +125,7 @@ def get_longest_contiguous_data(data):
                 longest_period = duration
                 longest_start = current_block_start
                 longest_end = current_block_end #from gemini
-    return longest_period, longest_start, longest_end #pylint: disable=redefined-outer-name
+    return longest_period, longest_start, longest_end
 
 if __name__ == '__main__':
 
