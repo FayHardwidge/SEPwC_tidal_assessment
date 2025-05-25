@@ -22,6 +22,7 @@ import uptide
 import pandas as pd
 import numpy as np
 from scipy import stats
+import matplotlib.pyplot as plt
 
 def read_tidal_data(filename):
     """
@@ -84,6 +85,15 @@ def sea_level_rise(data):
     y = df_clean['Sea Level'].values
     slope, _, _, p_value, _ = stats.linregress(x,y)
     slope = slope * 3600 * 24 #changed to average sea level rise per day instead of per second
+    plt.figure(figsize=(15, 7))
+    df_plot = data.dropna(subset=['Sea Level'])
+    plt.plot(df_plot.index, df_plot['Sea Level'], marker='.', linestyle='-', markersize=2, linewidth=0.5, label='Observed Sea Level')
+    plt.xlabel("Year")
+    plt.ylabel("Sea Level")
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
     return slope, p_value
 
 def tidal_analysis(data, constituents, start_datetime):
